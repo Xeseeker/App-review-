@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "Appora",
+    "slug": "appora",
+    "version": "1.0.0",
+    "scheme": "appora",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "plugins": ["expo-router"],
+    "experiments": { "typedRoutes": false }
+  }
+}

@@ -1,0 +1,5 @@
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { colors } from '../constants/theme';
+export function Loading({ label = 'Loading…' }) { return <View style={styles.box}><ActivityIndicator color={colors.brand} /><Text style={styles.text}>{label}</Text></View>; }
+export function Message({ title, message, onRetry }) { return <View style={styles.box}><Text style={styles.title}>{title}</Text>{message && <Text style={styles.text}>{message}</Text>}{onRetry && <Pressable style={styles.button} onPress={onRetry}><Text style={styles.buttonText}>Try again</Text></Pressable>}</View>; }
+const styles = StyleSheet.create({ box: { alignItems: 'center', justifyContent: 'center', gap: 10, padding: 28 }, title: { color: colors.ink, fontSize: 18, fontWeight: '700', textAlign: 'center' }, text: { color: colors.muted, textAlign: 'center' }, button: { borderRadius: 10, paddingHorizontal: 16, paddingVertical: 10, backgroundColor: colors.brand }, buttonText: { color: 'white', fontWeight: '700' } });
