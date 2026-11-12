@@ -3,6 +3,7 @@ const baseURL = process.env.EXPO_PUBLIC_API_BASE_URL;
 const api = axios.create({ baseURL: baseURL || 'http://localhost:5000/api', timeout: 12000 });
 export const apiMessage = (error) => error.response?.data?.error?.message || (error.code === 'ECONNABORTED' ? 'The request timed out. Check your connection and try again.' : 'Unable to reach Appora. Check your internet connection and try again.');
 export const getApps = (params) => api.get('/apps', { params }).then((response) => response.data);
+export const getRecentApps = () => api.get('/apps', { params: { page: 1, limit: 10, sort: 'newest' } }).then((response) => response.data.data);
 export const searchByCode = (code) => api.get('/apps/search', { params: { code: code.trim().toUpperCase() } }).then((response) => response.data.data);
 export const getApp = (id) => api.get(`/apps/${id}`).then((response) => response.data.data);
 export const getCategories = () => api.get('/categories').then((response) => response.data.data);

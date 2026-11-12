@@ -39,10 +39,23 @@ export default function ManageApps() {
     }
   }
 
+  const getStatusBadge = (status) => {
+    const styles = {
+      published: "bg-green-100 text-green-700",
+      draft: "bg-yellow-100 text-yellow-700",
+      unpublished: "bg-slate-100 text-slate-700",
+    };
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status]}`}>
+        {status}
+      </span>
+    );
+  };
+
   return (
     <>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-bold">Manage apps</h1>
+        <h1 className="text-3xl font-bold text-slate-900">Manage apps</h1>
         <Link className="button" to="/apps/new">
           Add app
         </Link>
@@ -53,6 +66,7 @@ export default function ManageApps() {
             value={search}
             placeholder="Search by app name"
             onChange={(event) => setSearch(event.target.value)}
+            className="flex-1"
           />
           <button className="button-secondary" onClick={load}>
             Search
@@ -60,50 +74,54 @@ export default function ManageApps() {
         </div>
         {error && <p className="error">{error}</p>}
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b">
+          <table className="w-full text-left">
+            <thead className="border-b border-slate-200">
               <tr>
-                <th className="p-2">App</th>
-                <th className="p-2">Code</th>
-                <th className="p-2">Category</th>
-                <th className="p-2">Status</th>
-                <th className="p-2">Actions</th>
+                <th className="p-3 text-sm font-semibold text-slate-700">App</th>
+                <th className="p-3 text-sm font-semibold text-slate-700">Code</th>
+                <th className="p-3 text-sm font-semibold text-slate-700">Category</th>
+                <th className="p-3 text-sm font-semibold text-slate-700">Status</th>
+                <th className="p-3 text-sm font-semibold text-slate-700">Actions</th>
               </tr>
             </thead>
             <tbody>
               {apps.map((app) => (
-                <tr className="border-b" key={app.id}>
-                  <td className="p-2">
-                    <div className="flex items-center gap-2">
-                      {app.poster_url && (
+                <tr className="border-b border-slate-100 hover:bg-slate-50" key={app.id}>
+                  <td className="p-3">
+                    <div className="flex items-center gap-3">
+                      {app.poster_url ? (
                         <img
-                          className="h-9 w-9 rounded object-cover"
+                          className="h-12 w-12 rounded-lg object-cover"
                           src={app.poster_url}
                           alt=""
                         />
+                      ) : (
+                        <div className="h-12 w-12 rounded-lg bg-slate-100" />
                       )}
-                      {app.name}
+                      <span className="font-medium text-slate-900">{app.name}</span>
                     </div>
                   </td>
-                  <td className="p-2 font-mono">{app.search_code}</td>
-                  <td className="p-2">{app.categories?.name || "—"}</td>
-                  <td className="p-2 capitalize">{app.status}</td>
-                  <td className="space-x-2 p-2">
-                    <Link className="text-brand" to={`/apps/${app.id}`}>
-                      Edit
-                    </Link>
-                    <button
-                      className="text-brand"
-                      onClick={() => changeStatus(app)}
-                    >
-                      {app.status === "published" ? "Unpublish" : "Publish"}
-                    </button>
-                    <button
-                      className="text-red-600"
-                      onClick={() => remove(app)}
-                    >
-                      Delete
-                    </button>
+                  <td className="p-3 font-mono text-sm text-slate-600">{app.search_code}</td>
+                  <td className="p-3 text-sm text-slate-600">{app.categories?.name || "—"}</td>
+                  <td className="p-3">{getStatusBadge(app.status)}</td>
+                  <td className="p-3">
+                    <div className="flex gap-2">
+                      <Link className="text-sm font-medium text-brand hover:text-indigo-700" to={`/apps/${app.id}`}>
+                        Edit
+                      </Link>
+                      <button
+                        className="text-sm font-medium text-brand hover:text-indigo-700"
+                        onClick={() => changeStatus(app)}
+                      >
+                        {app.status === "published" ? "Unpublish" : "Publish"}
+                      </button>
+                      <button
+                        className="text-sm font-medium text-red-600 hover:text-red-700"
+                        onClick={() => remove(app)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -111,7 +129,7 @@ export default function ManageApps() {
           </table>
         </div>
         {!apps.length && (
-          <p className="p-4 text-slate-500">No apps match your search.</p>
+          <p className="p-8 text-center text-slate-500">No apps match your search.</p>
         )}
       </div>
     </>

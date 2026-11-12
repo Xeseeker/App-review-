@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api, { messageFrom } from "../services/api";
+
 const blank = {
   name: "",
   search_code: "",
@@ -12,6 +13,7 @@ const blank = {
   status: "published",
   featured: false,
 };
+
 export default function AppForm() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -20,6 +22,7 @@ export default function AppForm() {
   const [poster, setPoster] = useState(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+
   useEffect(() => {
     api.get("/categories").then((r) => setCategories(r.data.data));
     if (id)
@@ -33,9 +36,11 @@ export default function AppForm() {
         )
         .catch((reason) => setError(messageFrom(reason)));
   }, [id]);
+
   function update(key, value) {
     setForm({ ...form, [key]: value });
   }
+
   async function submit(event) {
     event.preventDefault();
     setSaving(true);
@@ -61,6 +66,7 @@ export default function AppForm() {
       setSaving(false);
     }
   }
+
   const field = (key, label, type = "text", required = false) => (
     <label className="label">
       {label}
@@ -72,12 +78,13 @@ export default function AppForm() {
       />
     </label>
   );
+
   return (
     <>
-      <h1 className="mb-6 text-3xl font-bold">
+      <h1 className="mb-6 text-3xl font-bold text-slate-900">
         {id ? "Edit app" : "Create app"}
       </h1>
-      <form className="card max-w-3xl space-y-4" onSubmit={submit}>
+      <form className="card max-w-3xl space-y-6" onSubmit={submit}>
         <div className="grid gap-4 md:grid-cols-2">
           {field("name", "App name", "text", true)}
           {field("search_code", "Unique search code", "text", true)}
@@ -131,19 +138,28 @@ export default function AppForm() {
             />
           </label>
         </div>
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-3 cursor-pointer">
           <input
-            className="h-4 w-4"
+            className="h-5 w-5 rounded border-slate-300 text-brand focus:ring-brand"
             type="checkbox"
             checked={form.featured}
             onChange={(event) => update("featured", event.target.checked)}
-          />{" "}
-          Feature on mobile home
+          />
+          <span className="text-sm font-medium text-slate-700">Feature on mobile home</span>
         </label>
         {error && <p className="error">{error}</p>}
-        <button className="button" disabled={saving}>
-          {saving ? "Saving…" : "Save app"}
-        </button>
+        <div className="flex gap-3">
+          <button className="button flex-1" disabled={saving}>
+            {saving ? "Saving…" : "Save app"}
+          </button>
+          <button
+            type="button"
+            className="button-secondary flex-1"
+            onClick={() => navigate("/apps")}
+          >
+            Cancel
+          </button>
+        </div>
       </form>
     </>
   );

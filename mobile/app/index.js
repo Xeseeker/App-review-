@@ -1,62 +1,33 @@
-import { Pressable, StyleSheet, Text, TextInput, View, Image } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View, Image, ScrollView } from "react-native";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Screen from "../src/components/Screen";
 import { colors } from "../src/constants/theme";
-
-const mockApps = [
-  {
-    id: "promo-1",
-    title: "Unlock Extra Earnings: Simple Micro-Tasks on Your Smartphone",
-    description: "Discover how you can earn extra income by completing simple micro-tasks right from your smartphone. Perfect for anyone looking to make money in their spare time.",
-    date: "October 14, 2026",
-    accent: "#1d4ed8",
-    visual: "▣",
-    poster: "https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800",
-    featured: true,
-  },
-  {
-    id: "promo-2",
-    title: "Stay Connected to Ethiopia with EthioCall Simcard",
-    description: "Get the best rates for calls to Ethiopia with our premium simcard service.",
-    date: "October 13, 2026",
-    accent: "#2563eb",
-    visual: "✦",
-    poster: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400",
-    featured: false,
-  },
-  {
-    id: "promo-3",
-    title: "Optimize Your Smartphone Performance",
-    description: "Clean up your device and boost performance.",
-    date: "October 18, 2026",
-    accent: "#3b82f6",
-    visual: "◈",
-    poster: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400",
-    featured: false,
-  },
-  {
-    id: "promo-4",
-    title: "Transform Your Living Space with AI-Powered Home Decor",
-    description: "AI-powered home design suggestions.",
-    date: "October 17, 2026",
-    accent: "#f59e0b",
-    visual: "◍",
-    poster: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400",
-    featured: false,
-  },
-];
+import { getRecentApps, getApps } from "../src/services/api";
+import { Loading, Message } from "../src/components/StateView";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
-  const featuredApp = mockApps[0];
-  const recentApps = mockApps.slice(1);
+  const [apps, setApps] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const filteredApps = searchQuery
-    ? mockApps.filter((app) =>
-        app.title.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : null;
+  const loadApps = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const data = await getRecentApps();
+      setApps(data);
+    } catch (err) {
+      setError("Could not load apps. Please check your connection.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadApps();
+  }, []);
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
@@ -64,97 +35,138 @@ export default function Home() {
     }
   };
 
+  const featuredApp = apps && apps.length > 0 ? apps[0] : null;
+  const recentApps = apps && apps.length > 1 ? apps.slice(1) : [];
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  if (loading) {
+    return (
+      <Screen activeTab="recent">
+        <View style={styles.header}>
+          <Text style={styles.brandName}>Appora</Text>
+          <View style={styles.headerIcons}>
+            <Text style={styles.headerIcon}>⋮</Text>
+          </View>
+        </View>
+        <Loading />
+      </Screen>
+    );
+  }
+
+  if (error) {
+    return (
+      <Screen activeTab="recent">
+        <View style={styles.header}>
+          <Text style={styles.brandName}>Appora</Text>
+          <View style={styles.headerIcons}>
+            <Text style={styles.headerIcon}>⋮</Text>
+          </View>
+        </View>
+        <Message title="Unable to load apps" message={error} onRetry={loadApps} />
+      </Screen>
+    );
+  }
+
   return (
     <Screen activeTab="recent">
-      <View style={styles.header}>
-        <Text style={styles.brandName}>Appora</Text>
-        <View style={styles.headerIcons}>
-          <Text style={styles.headerIcon}>⋮</Text>
-        </View>
-      </View>
+      <ScrollView style={styles.scrollContainer}>
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <Text style={styles.brandName}>Appora</Text>
+            <View style={styles.headerIcons}>
+              <Text style={styles.headerIcon}>⋮</Text>
+            </View>
+          </View>
 
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Text style={styles.searchIcon}>🔍</Text>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search apps..."
-            placeholderTextColor={colors.muted}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onSubmitEditing={handleSearch}
-            returnKeyType="search"
-          />
-        </View>
-      </View>
+          <View style={styles.searchContainer}>
+            <View style={styles.searchBar}>
+              <Text style={styles.searchIcon}>🔍</Text>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search apps..."
+                placeholderTextColor={colors.muted}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                onSubmitEditing={handleSearch}
+                returnKeyType="search"
+              />
+            </View>
+          </View>
 
-      {filteredApps ? (
-        <>
-          <Text style={styles.sectionTitle}>Search Results</Text>
+          <Text style={styles.sectionTitle}>Recent</Text>
+
+          {featuredApp && (
+            <Pressable
+              style={styles.featuredCard}
+              onPress={() => router.push(`/app-details/${featuredApp.id}`)}
+            >
+              {featuredApp.poster_url ? (
+                <Image source={{ uri: featuredApp.poster_url }} style={styles.featuredPoster} />
+              ) : (
+                <View style={[styles.featuredPoster, styles.posterPlaceholder]} />
+              )}
+              <View style={styles.featuredContent}>
+                <Text style={styles.featuredTitle}>{featuredApp.name}</Text>
+                <Text style={styles.featuredDescription} numberOfLines={2}>
+                  {featuredApp.short_description || featuredApp.description}
+                </Text>
+                <View style={styles.featuredMeta}>
+                  <Text style={styles.featuredDate}>{formatDate(featuredApp.created_at)}</Text>
+                </View>
+              </View>
+            </Pressable>
+          )}
+
           <View style={styles.recentList}>
-            {filteredApps.length > 0 ? (
-              filteredApps.map((app) => (
+            {recentApps.length > 0 ? (
+              recentApps.map((app) => (
                 <Pressable
                   key={app.id}
                   style={styles.recentItem}
                   onPress={() => router.push(`/app-details/${app.id}`)}
                 >
-                  <Image source={{ uri: app.poster }} style={styles.recentPoster} />
                   <View style={styles.recentContent}>
-                    <Text style={styles.recentTitle}>{app.title}</Text>
-                    <Text style={styles.recentDate}>{app.date}</Text>
+                    <Text style={styles.recentTitle}>{app.name}</Text>
+                    <Text style={styles.recentDescription} numberOfLines={2}>
+                      {app.short_description || app.description}
+                    </Text>
+                    <Text style={styles.recentDate}>{formatDate(app.created_at)}</Text>
                   </View>
-                  <Text style={styles.chevron}>›</Text>
+                  {app.poster_url ? (
+                    <Image source={{ uri: app.poster_url }} style={styles.recentPoster} />
+                  ) : (
+                    <View style={[styles.recentPoster, styles.posterPlaceholder]} />
+                  )}
                 </Pressable>
               ))
             ) : (
-              <Text style={styles.noResults}>No apps found</Text>
+              <Text style={styles.noResults}>No recent apps</Text>
             )}
           </View>
-        </>
-      ) : (
-        <>
-          <Text style={styles.sectionTitle}>Recent</Text>
-
-          <Pressable
-            style={styles.featuredCard}
-            onPress={() => router.push(`/app-details/${featuredApp.id}`)}
-          >
-            <Image source={{ uri: featuredApp.poster }} style={styles.featuredPoster} />
-            <View style={styles.featuredContent}>
-              <Text style={styles.featuredTitle}>{featuredApp.title}</Text>
-              <Text style={styles.featuredDescription} numberOfLines={2}>
-                {featuredApp.description}
-              </Text>
-              <View style={styles.featuredMeta}>
-                <Text style={styles.featuredDate}>{featuredApp.date}</Text>
-              </View>
-            </View>
-          </Pressable>
-
-          <View style={styles.recentList}>
-            {recentApps.map((app) => (
-              <Pressable
-                key={app.id}
-                style={styles.recentItem}
-                onPress={() => router.push(`/app-details/${app.id}`)}
-              >
-                <Image source={{ uri: app.poster }} style={styles.recentPoster} />
-                <View style={styles.recentContent}>
-                  <Text style={styles.recentTitle}>{app.title}</Text>
-                  <Text style={styles.recentDate}>{app.date}</Text>
-                </View>
-                <Text style={styles.chevron}>›</Text>
-              </Pressable>
-            ))}
-          </View>
-        </>
-      )}
+        </View>
+      </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flex: 1,
+    backgroundColor: "#ffffff",
+  },
+  content: {
+    paddingHorizontal: 16,
+    paddingBottom: 120,
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -184,12 +196,10 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.card,
+    backgroundColor: "#e0f2fe",
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   searchIcon: {
     fontSize: 18,
@@ -208,38 +218,28 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
   featuredCard: {
-    backgroundColor: colors.card,
-    borderRadius: 20,
     marginBottom: 24,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: "#0f172a",
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
   },
   featuredPoster: {
     width: "100%",
     height: 180,
+    borderRadius: 16,
     resizeMode: "cover",
+    marginBottom: 12,
   },
   featuredContent: {
-    padding: 16,
+    gap: 8,
   },
   featuredTitle: {
     fontSize: 18,
     fontWeight: "700",
     color: colors.ink,
-    marginBottom: 8,
     lineHeight: 24,
   },
   featuredDescription: {
     fontSize: 14,
     color: colors.muted,
     lineHeight: 20,
-    marginBottom: 12,
   },
   featuredMeta: {
     flexDirection: "row",
@@ -251,48 +251,47 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   recentList: {
-    gap: 12,
+    gap: 16,
   },
   recentItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
     gap: 12,
+    paddingVertical: 8,
   },
   recentPoster: {
-    width: 70,
-    height: 70,
+    width: 80,
+    height: 80,
     borderRadius: 12,
     resizeMode: "cover",
   },
   recentContent: {
     flex: 1,
+    gap: 4,
   },
   recentTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "700",
     color: colors.ink,
-    marginBottom: 4,
-    lineHeight: 20,
+    lineHeight: 22,
+  },
+  recentDescription: {
+    fontSize: 13,
+    color: colors.muted,
+    lineHeight: 18,
   },
   recentDate: {
     fontSize: 12,
     color: colors.muted,
     fontWeight: "600",
   },
-  chevron: {
-    fontSize: 24,
-    color: colors.muted,
-    fontWeight: "300",
-  },
   noResults: {
     fontSize: 16,
     color: colors.muted,
     textAlign: "center",
     paddingVertical: 20,
+  },
+  posterPlaceholder: {
+    backgroundColor: "#e0e7ff",
   },
 });
