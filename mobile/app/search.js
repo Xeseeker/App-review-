@@ -1,10 +1,94 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import Screen from '../src/components/Screen';
 import AppCard from '../src/components/AppCard';
 import { Loading, Message } from '../src/components/StateView';
 import { apiMessage, recordEvent, searchByCode } from '../src/services/api';
 import { colors } from '../src/constants/theme';
-export default function Search() { const params = useLocalSearchParams(); const [code, setCode] = useState(params.code || ''); const [app, setApp] = useState(null); const [state, setState] = useState('idle'); const [error, setError] = useState(''); async function search() { const normalized = code.trim().toUpperCase(); if (!normalized) { setError('Enter a search code first.'); setState('error'); return; } setState('loading'); setError(''); try { const result = await searchByCode(normalized); setApp(result); setState('success'); recordEvent(result.id, 'search'); } catch (reason) { setApp(null); setError(reason.response?.status === 404 ? 'No published app matches that code. Check the code and try again.' : apiMessage(reason)); setState('error'); } } useEffect(() => { if (params.code?.trim()) search(); }, []); return <Screen><Text style={styles.intro}>Enter the code from an Appora promotion.</Text><View style={styles.row}><TextInput style={styles.input} autoFocus autoCapitalize="characters" autoCorrect={false} placeholder="GAME25" value={code} onChangeText={setCode} onSubmitEditing={search} /><Pressable style={styles.button} onPress={search}><Text style={styles.buttonText}>Search</Text></Pressable></View>{state === 'loading' && <Loading label="Finding your app…" />}{state === 'error' && <Message title="Search unavailable" message={error} onRetry={search} />}{state === 'success' && <><Text style={styles.result}>Match found</Text><AppCard app={app} /><Pressable style={styles.open} onPress={() => router.push(`/app-details/${app.id}`)}><Text style={styles.openText}>View app details</Text></Pressable></>}</Screen>; }
-const styles = StyleSheet.create({ intro: { color: colors.muted, fontSize: 16 }, row: { flexDirection: 'row', gap: 8 }, input: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 12, backgroundColor: 'white', paddingHorizontal: 14, fontSize: 16 }, button: { justifyContent: 'center', borderRadius: 12, backgroundColor: colors.brand, paddingHorizontal: 16 }, buttonText: { color: 'white', fontWeight: '700' }, result: { fontWeight: '700', fontSize: 18, color: colors.ink }, open: { alignSelf: 'flex-start', borderRadius: 10, backgroundColor: '#e0e7ff', padding: 12 }, openText: { color: '#3730a3', fontWeight: '700' } });
+
+export default function Search() {
+  const params = useLocalSearchParams();
+  const [code, setCode] = useState(params.code || '');
+  const [app, setApp] = useState(null);
+  const [state, setState] = useState('idle');
+  const [error, setError] = useState('');
+
+  async function search() {
+    const normalized = code.trim().toUpperCase();
+    if (!normalized) {
+      setError('Enter a search code first.');
+      setState('error');
+      return;
+    }
+    setState('loading');
+    setError('');
+    try {
+      const result = await searchByCode(normalized);
+      setApp(result);
+      setState('success');
+      recordEvent(result.id, 'search');
+    } catch (reason) {
+      setApp(null);
+      setError(reason.response?.status === 404 ? 'No published app matches that code. Check the code and try again.' : apiMessage(reason));
+      setState('error');
+    }
+  }
+
+  useEffect(() => {
+    if (params.code?.trim()) search();
+  }, []);
+
+  return (
+    <Screen>
+      <Text style={styles.intro}>Enter the code from an Appora promotion.</Text>
+      <View style={styles.row}>
+        <TextInput
+          style={styles.input}
+          autoFocus
+          autoCapitalize="characters"
+          autoCorrect={false}
+          placeholder="GAME25"
+          value={code}
+          onChangeText={setCode}
+          onSubmitEditing={search}
+        />
+        <Pressable style={styles.button} onPress={search}>
+          <Text style={styles.buttonText}>Search</Text>
+        </Pressable>
+      </View>
+      <View style={styles.banner}>
+        <BannerAd
+          unitId={TestIds.BANNER}
+          size={BannerAdSize.BANNER}
+          requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+          onAdFailedToLoad={(adError) => console.warn('AdMob search banner failed to load:', adError)}
+        />
+      </View>
+      {state === 'loading' && <Loading label="Finding your app…" />}
+      {state === 'error' && <Message title="Search unavailable" message={error} onRetry={search} />}
+      {state === 'success' && (
+        <>
+          <Text style={styles.result}>Match found</Text>
+          <AppCard app={app} />
+          <Pressable style={styles.open} onPress={() => router.push(`/app-details/${app.id}`)}>
+            <Text style={styles.openText}>View app details</Text>
+          </Pressable>
+        </>
+      )}
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  intro: { color: colors.muted, fontSize: 16 },
+  row: { flexDirection: 'row', gap: 8 },
+  input: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 12, backgroundColor: 'white', paddingHorizontal: 14, fontSize: 16 },
+  button: { justifyContent: 'center', borderRadius: 12, backgroundColor: colors.brand, paddingHorizontal: 16 },
+  buttonText: { color: 'white', fontWeight: '700' },
+  banner: { alignItems: 'center', marginVertical: 4 },
+  result: { fontWeight: '700', fontSize: 18, color: colors.ink },
+  open: { alignSelf: 'flex-start', borderRadius: 10, backgroundColor: '#e0e7ff', padding: 12 },
+  openText: { color: '#3730a3', fontWeight: '700' },
+});

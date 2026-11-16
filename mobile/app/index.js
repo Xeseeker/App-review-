@@ -5,6 +5,7 @@ import Screen from "../src/components/Screen";
 import { colors } from "../src/constants/theme";
 import { getRecentApps, getApps } from "../src/services/api";
 import { Loading, Message } from "../src/components/StateView";
+import { BannerAd, BannerAdSize, TestIds } from "react-native-google-mobile-ads";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -102,6 +103,17 @@ export default function Home() {
             </View>
           </View>
 
+          <View style={styles.bannerContainer}>
+            <BannerAd
+              unitId={TestIds.BANNER}
+              size={BannerAdSize.BANNER}
+              requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+              onAdFailedToLoad={(adError) => {
+                console.warn("AdMob banner failed to load:", adError);
+              }}
+            />
+          </View>
+
           <Text style={styles.sectionTitle}>Recent</Text>
 
           {featuredApp && (
@@ -191,6 +203,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   searchContainer: {
+    marginBottom: 20,
+  },
+  bannerContainer: {
+    alignItems: "center",
     marginBottom: 20,
   },
   searchBar: {

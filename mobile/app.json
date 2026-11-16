@@ -6,7 +6,27 @@
     "scheme": "appora",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "plugins": ["expo-router"],
-    "experiments": { "typedRoutes": false }
+    "android": {
+      "package": "com.xeseeker.appora"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "eec05026-7c57-4a36-841f-f5687123b397"
+      }
+    }
   }
 }
