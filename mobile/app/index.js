@@ -5,7 +5,7 @@ import Screen from "../src/components/Screen";
 import { colors } from "../src/constants/theme";
 import { getRecentApps, getApps } from "../src/services/api";
 import { Loading, Message } from "../src/components/StateView";
-import { BannerAd, BannerAdSize, TestIds } from "react-native-google-mobile-ads";
+import { BannerAd, BannerAdSize } from "react-native-google-mobile-ads";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -105,7 +105,7 @@ export default function Home() {
 
           <View style={styles.bannerContainer}>
             <BannerAd
-              unitId={TestIds.BANNER}
+              unitId="ca-app-pub-8191645449743067/1252408774"
               size={BannerAdSize.BANNER}
               requestOptions={{ requestNonPersonalizedAdsOnly: true }}
               onAdFailedToLoad={(adError) => {
